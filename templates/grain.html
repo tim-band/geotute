@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block head %}
+<script>
+    function clickgrain(ev) {
+        window.location = "{% url 'result' %}?x=" + ev.offsetX + "&y=" + ev.offsetY;
+    }
+    function setup() {
+        document.getElementById('grain').addEventListener('click', clickgrain);
+    }
+</script>
+{% endblock %}
+{% block bodyattrs %}onload="setup()"{% endblock %}
+{% block body %}
+<img id="grain" src="{% static 'tutorial/Grain01/ReflStack-01.jpg' %}">
+{% endblock %}

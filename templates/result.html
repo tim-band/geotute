@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block body %}
+Result! {{ hello }}
+{{ request.GET.x }}, {{request.GET.y}}: {{ picked }}
+<li>
+    {% for roi in picked %}
+    <ul>++{{ roi }}</ul>
+    {% endfor %}
+</li>
+{% endblock %}
