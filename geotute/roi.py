@@ -1,4 +1,5 @@
 import read_roi
+import logging
 
 def isInPolygon(roi, x, y):
     xs = roi['x']
@@ -40,37 +41,47 @@ def isInOval(roi, x, y):
     yd = (y - roi['top']) / roi['height'] - 0.5
     r2 = xd * xd + yd * yd
     if r2 <= 0.25:
-        print('oval')
         return True
     return False
 
 def isInFreeline(roi, x, y):
-    print("don't know how to calculate freeline")
+    logging.warn("don't know how to calculate freeline")
     return False
 
 def isInPolyline(roi, x, y):
-    print("don't know how to calculate polyline")
+    logging.warn("don't know how to calculate polyline")
     return False
 
 def isInFreehand(roi, x, y):
-    if 'aspect_ratio' in roi:
-        print("don't know how to calculate ellipse")
-        # roi['ex1'], roi['ey1'], roi['ex2'], roi['ey2']
-        # are these the largest extents of the ellipse?
-        return False
-    print("don't know how to calculate freehand that isn't an ellipse")
+    aspect_ratio = roi.get('aspect_ratio')
+    if aspect_ratio is not None:
+        # anchor point of the ellipse
+        ax = roi['ex1']
+        ay = roi['ey1']
+        # main axis of the ellipse
+        dx = roi['ex2'] - ax
+        dy = roi['ey2'] - ay
+        d_mag2 = dx * dx + dy * dy
+        # point under test relative to ellipse centre
+        ex = x - ax - dx/2
+        ey = y - ay - dy/2
+        # get position along main axis
+        rx = (ex * dx + ey * dy) / d_mag2
+        ry = (ex * dy - ey * dx) / (d_mag2 * aspect_ratio * aspect_ratio)
+        return rx * rx + ry * ry <= 0.25
+    logging.warn("don't know how to calculate freehand that isn't an ellipse")
     return False
 
 def isInTraced(roi, x, y):
-    print("don't know how to calculate traced")
+    logging.warn("don't know how to calculate traced")
     return False
 
 def belowCubicSegment(x, y, x0, y0, x1, y1, x2, y2, x3, y3):
-    print("Cannot calculate cubic segments")
+    logging.warn("Cannot calculate cubic segments")
     return False
 
 def belowQuadSegment(x, y, x0, y0, x1, y1, x2, y2):
-    print("Cannot calculate quad segments")
+    logging.warn("Cannot calculate quad segments")
     return False
 
 def belowLinearSegment(x, y, x0, y0, x1, y1):
@@ -92,7 +103,7 @@ def belowLineSegment(x, y, lastx, lasty, seg):
         return belowQuadSegment(x, y, lastx, lasty, *seg)
     elif type == 6:
         return belowCubicSegment(x, y, lastx, lasty, *seg)
-    print("did not understand path segment ({0})".format(seg))
+    logging.warn("did not understand path segment ({0})".format(seg))
     return False
 
 def isInComposite(roi, x, y):
@@ -110,7 +121,6 @@ def isInComposite(roi, x, y):
                 count += 1
             lastx = segment[-2]
             lasty = segment[-1]
-        print(count)
         if count % 2 == 1:
             return True
     return False
@@ -134,7 +144,7 @@ class Rois:
         for name, roi in self.name2roi.items():
             isIn = isInFns.get(roi['type'])
             if isIn is None:
-                print("ROI type '{0}' not understood".format(roi['type']))
+                logging.warn("ROI type '{0}' not understood".format(roi['type']))
             elif isIn(roi, x, y):
                 rs.append(name)
         return rs
