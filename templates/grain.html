@@ -5,12 +5,44 @@
     function clickgrain(ev) {
         window.location = "{% url 'result' %}?x=" + ev.offsetX + "&y=" + ev.offsetY;
     }
+    function updateInfoFn(req, x, y) {
+        return function() {
+            var text = "(" + x + "," + y + ")";
+            var delim = " {";
+            for (const [k, v] of Object.entries(req.response)) {
+                text += delim + k + ": " + v;
+                delim = ", ";
+            }
+            document.getElementById('info').textContent = text + "}";
+        }
+    }
+    function wheregrain(ev) {
+        const x = ev.offsetX;
+        const y = ev.offsetY;
+        var req = new XMLHttpRequest();
+        req.addEventListener('load', updateInfoFn(req, x, y));
+        req.open('GET', '/result?x=' + x + '&y=' + y);
+        req.setRequestHeader('Accept', 'application/json');
+        req.responseType = 'json';
+        req.send();
+    }
     function setup() {
-        document.getElementById('grain').addEventListener('click', clickgrain);
+        const img = document.getElementById('grain')
+        img.addEventListener('click', clickgrain);
+        img.addEventListener('mousemove', wheregrain);
     }
 </script>
+<style>
+#info {
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    height: 30px;
+}
+</style>
 {% endblock %}
 {% block bodyattrs %}onload="setup()"{% endblock %}
 {% block body %}
-<img id="grain" src="{% static 'tutorial/Grain01/ReflStack-01.jpg' %}">
+<img id="grain" src="{% static 'tutorial/Grain01/ReflStack-00.jpg' %}">
+<div id="info">
 {% endblock %}
